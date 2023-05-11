@@ -41,24 +41,32 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
           : RefreshIndicator(
-            onRefresh: () { return refresh(); },
-            child: ListView(
+              onRefresh: () {
+                return refresh();
+              },
+              child: ListView(
                 children: List.generate(
                   listListins.length,
                   (index) {
                     Listin model = listListins[index];
-                    return ListTile(
-                      onLongPress: (){
-                        showFormModal(model: model);
+                    return Dismissible(
+                      key: ValueKey<Listin>(model),
+                      onDismissed: (direction){
+                        remove(model);
                       },
-                      leading: const Icon(Icons.list_alt_rounded),
-                      title: Text(model.name),
-                      subtitle: Text(model.id),
+                      child: ListTile(
+                        onLongPress: () {
+                          showFormModal(model: model);
+                        },
+                        leading: const Icon(Icons.list_alt_rounded),
+                        title: Text(model.name),
+                        subtitle: Text(model.id),
+                      ),
                     );
                   },
                 ),
               ),
-          ),
+            ),
     );
   }
 
@@ -72,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
     TextEditingController nameController = TextEditingController();
 
     //Caso esteja editando
-    if (model != null){
+    if (model != null) {
       labelTitle = "Editando ${model.name}";
       nameController.text = model.name;
     }
@@ -95,7 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Formulário com Título, Campo e Botões
           child: ListView(
             children: [
-              Text(labelTitle, style: Theme.of(context).textTheme.headline5),
+              Text(labelTitle,
+                  style: Theme.of(context).textTheme.headlineSmall),
               TextFormField(
                 controller: nameController,
                 decoration:
@@ -124,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         name: nameController.text,
                       );
 
-                      if(model != null){
+                      if (model != null) {
                         listin.id = model.id;
                       }
 
@@ -156,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     QuerySnapshot<Map<String, dynamic>> snapshot =
         await firestore.collection('listins').get();
-    
+
     for (var doc in snapshot.docs) {
       temp.add(Listin.fromMap(doc.data()));
     }
@@ -164,5 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       listListins = temp;
     });
+  }
+
+  void remove(Listin model) {
+    firestore.collection('listins').doc(model.id).delete();
   }
 }
